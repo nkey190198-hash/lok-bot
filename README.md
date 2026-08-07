@@ -1,0 +1,1 @@
+Зеркало мини-аппов для СТАРЫХ кнопок в отправленных Telegram-сообщениях (URL nkey190198-hash.github.io/lok-bot/... вшиты навсегда). Код бота: приватный репо tatu-bot-core. Синк: tools/sync_webapp_to_apps.sh.
