@@ -509,11 +509,11 @@
   .expiry-banner { border-color: rgba(216,72,74,0.5) !important; box-shadow: 0 0 18px rgba(216,72,74,0.10); }
   .expiry-banner .card-label { color: #FFAA88 !important; }
 
-  /* v214: AUTORENEW BOX — индикатор автопродления (информационный, преchecked).
-     Чекбокс не управляет реальной логикой — реальное отключение через
-     cancel-flow в pricing-window. Здесь — для прозрачности «как это работает». */
+  /* v214: AUTORENEW BOX — блок подписки. v1004: чекбокс заменён кнопкой
+     «🔕 Отключить подписку» (cancel-flow с retention). v1064: с витрины
+     (pricing-window) кнопка подписки снята — этот блок единственный
+     выключатель и включатель подписки. */
   .autorenew-box { padding: 14px 16px; }
-  .autorenew-box label input[type="checkbox"] { accent-color: var(--color-accent); }
 
   /* TRYON-LINKS (🔗 Ссылки примерки) — v145 ─────────────
      Мастер генерит ссылку на эскиз → клиент мерит на себя → жмёт «Хочу».
@@ -1005,10 +1005,10 @@
          Числа в разметке — только заглушка первого кадра. Раньше тут стояло
          «+ 25 примерок тату на тело» при реальных 12 (срезано ещё в v403) и
          три копии «299 ₽», которые пережили бы плановый флип 299→399. -->
-    <h1>Тариф Trial<br>7 дней за <span class="js-trial-price">399</span> ₽</h1>
+    <h1>Тариф Trial<br>7 дней за <span class="js-trial-price">499</span> ₽</h1>
     <p class="lead">
       Полный доступ к ИИ-инструментам тату-мастера на 7 дней
-      за <span class="js-trial-price">399</span> ₽ (оплата через СБП).
+      за <span class="js-trial-price">499</span> ₽ (оплата через СБП).
       Дальше — по выбранному тарифу.
     </p>
     <div class="features-mini" id="trialFeatures"></div>
@@ -1016,8 +1016,8 @@
       Активировать Пробный
     </button>
     <div class="small">
-      Разовая проба за <span class="js-trial-price">399</span> ₽ через СБП —
-      <b>без привязки карты</b>.<br>
+      Разовая проба за <span class="js-trial-price">499</span> ₽ через СБП —
+      <b>без подписки</b>.<br>
       Через 7 дней доступ закроется, дальше можно купить любой платный тариф.
     </div>
   </div>
@@ -1212,42 +1212,41 @@
     </button>
   </div>
 
-  <!-- v214: 🔁 AUTORENEW BOX — информационный индикатор автопродления.
-       v216 LAUNCH-BLOCKER #2: чекбокс показывается ТОЛЬКО когда backend
-       вернул autorenew_active=true (см. applyCabinet). Иначе рендерится
-       alt-карточка #autorenewTrialNote — без чекбокса и ложного «активно».
+  <!-- v214: 🔁 БЛОК ПОДПИСКИ. v216 LAUNCH-BLOCKER #2: показывается ТОЛЬКО
+       когда backend вернул autorenew_active=true (см. applyCabinet). Иначе
+       рендерится alt-карточка #autorenewTrialNote — без ложного «активно».
        Backend: bot.py _build_cabinet_payload отдаёт autorenew_active.
-       Order:6 — самый низ, перед footer-nav. -->
-  <div class="card autorenew-box hidden" id="autorenewBox" style="order:6;margin-top:6px">
-    <label style="display:flex;align-items:center;gap:11px;cursor:pointer">
-      <input type="checkbox" id="autorenewCheck" checked style="width:18px;height:18px;accent-color:var(--color-accent);cursor:pointer">
-      <span style="flex:1">
-        <span style="font-family:var(--font-display);font-weight:600;font-size:13px;color:var(--color-text);display:block">Автопродление активно</span>
-        <!-- Бриф J: что именно продлевается — тариф · цена · дата след. списания.
-             Заполняется в applyCabinet из tariff_name / tariffs[].price /
-             tariff_expires_at_iso. Владелец/мастер видит «какой тариф привязан». -->
-        <span id="autorenewDetail" style="font-size:12px;color:var(--color-accent);display:block;margin-top:3px;font-weight:600"></span>
-        <span style="font-size:11.5px;color:var(--color-text-muted);display:block;margin-top:3px">Без перерывов — клиенты по ссылке всегда видят твою тату. Отмена — 2 клика отсюда.</span>
-      </span>
-    </label>
+       v1004: блок поднят НАВЕРХ (order:1 — первым после шапки tariff-strip),
+       чекбокс заменён кнопкой «🔕 Отключить подписку», тексты — из
+       утверждённого макета 28.08. -->
+  <div class="card autorenew-box hidden" id="autorenewBox" style="order:1;margin-top:6px">
+    <span id="autorenewTitle" style="font-family:var(--font-display);font-weight:600;font-size:13px;color:var(--color-text);display:block">Подписка активна</span>
+    <!-- Бриф J: что именно продлевается — дата · цена · напоминание.
+         Заполняется в applyCabinet из tariff_expires_at_iso / tariffs[].price. -->
+    <span id="autorenewDetail" style="font-size:12px;color:var(--color-accent);display:block;margin-top:4px;font-weight:600"></span>
+    <!-- v1013 (заказ владельца 30.08): кнопка отмены стала БОЛЬШОЙ. Была
+         серой, прозрачной и мельче всего на карточке — подписка, отмену
+         которой надо искать, отменяется через банк, а чарджбэк бьёт по
+         магазину сильнее одного отказа. -->
+    <button id="autorenewOffBtn" style="margin-top:14px;width:100%;padding:14px 12px;border:1.5px solid rgba(216,72,74,0.55);border-radius:12px;background:rgba(216,72,74,0.10);color:#F08A8C;font-family:var(--font-display);font-weight:700;font-size:14px;letter-spacing:0.2px;cursor:pointer">Отключить подписку</button>
   </div>
 
-  <!-- v216 LAUNCH-BLOCKER #2: alt-карточка для триала / без сохранённой карты.
+  <!-- v216 LAUNCH-BLOCKER #2: alt-карточка для триала / платного без подписки.
        Показывается когда autorenew_active=false (включая всех trial-юзеров,
-       у которых recurring не подключён по дизайну). Без чекбокса — никаких
-       ложных обещаний «автопродление активно». -->
-  <div class="card autorenew-box hidden" id="autorenewTrialNote" style="order:6;margin-top:6px">
+       у которых recurring не подключён по дизайну). Никаких ложных обещаний.
+       v1004: тоже наверху (order:1), платному без подписки — тексты макета. -->
+  <div class="card autorenew-box hidden" id="autorenewTrialNote" style="order:1;margin-top:6px">
     <div style="display:flex;align-items:flex-start;gap:11px">
-      <span style="font-size:18px;line-height:1;margin-top:1px">🎁</span>
+      <span id="subNoteIcon" style="font-size:18px;line-height:1;margin-top:1px">🎁</span>
       <span style="flex:1">
         <span id="autorenewTrialNoteTitle" style="font-family:var(--font-display);font-weight:600;font-size:13px;color:var(--color-text);display:block">Активный тариф</span>
         <span id="autorenewTrialNoteBody" style="font-size:11.5px;color:var(--color-text-muted);display:block;margin-top:3px">Продли через прайс перед окончанием, чтобы не потерять доступ.</span>
       </span>
     </div>
-    <!-- v249: CTA привязки карты — показывается только платным без карты
-         (applyCabinet). Тап → deep-link ?start=bind_card → backend
-         _start_card_bind (проверочный платёж 1 ₽ → токен → автопродление). -->
-    <button id="bindCardBtn" class="hidden" style="margin-top:12px;width:100%;padding:11px 12px;border:none;border-radius:10px;background:var(--color-accent);color:#0a0a0a;font-family:var(--font-display);font-weight:700;font-size:13px;letter-spacing:0.2px;cursor:pointer">💳 Привязать карту для автопродления</button>
+    <!-- v249: CTA подключения подписки — показывается только платным без
+         подписки (applyCabinet). Тап → /api/bind-card → backend
+         _start_card_bind (проверочный платёж 1 ₽ → токен → подписка). -->
+    <button id="bindCardBtn" class="hidden" style="margin-top:12px;width:100%;padding:11px 12px;border:none;border-radius:10px;background:var(--color-accent);color:#0a0a0a;font-family:var(--font-display);font-weight:700;font-size:13px;letter-spacing:0.2px;cursor:pointer">🔔 Подключить подписку</button>
   </div>
 
 </div>
@@ -1273,6 +1272,11 @@
     tg.ready();
     tg.expand();
     try { tg.setHeaderColor('#0E1A14'); tg.setBackgroundColor('#0E1A14'); } catch(e) {}
+    // v1021: кабинет — КОРЕНЬ мини-аппа, отсюда назад некуда: выход тут «✕».
+    // Гасим кнопку ← явно, иначе она остаётся от страницы прайса (мини-апп
+    // живёт одним webview, состояние шапки переезжает вместе с навигацией) и
+    // ведёт по кругу «кабинет → кабинет».
+    try { tg.BackButton && tg.BackButton.hide(); } catch(e) {}
   }
 
   const API_BASE = 'https://worker-production-c1cb.up.railway.app';
@@ -1302,10 +1306,14 @@
   //     недоступности сервера.
   // Расхождение с MASTER_TARIFFS ловит tests/test_v672_tariff_video_boost.py.
   const FALLBACK_TARIFFS = [
-    { key:'trial',   name:'Trial',  price:399,  old_price:0,    days:7,  sketches:5,   stencils:5,   tryons:12,  extracts:3,   photo_retouch:5,  videos:0, clients_quota:25, animations:0,  demo_pool:25,   popular:false },
-    { key:'solo',    name:'Старт',  price:1490, old_price:1990, days:30, sketches:20,  stencils:15,  tryons:15,  extracts:15,  photo_retouch:10, videos:1, clients_quota:5,  animations:1,  demo_pool:100,  popular:false },
-    { key:'pro',     name:'Про',    price:2990, old_price:4990, days:30, sketches:120, stencils:60,  tryons:40,  extracts:60,  photo_retouch:30, videos:4, clients_quota:10, animations:12,  demo_pool:600,  popular:true  },
-    { key:'studio',  name:'Макс',   price:5990, old_price:9990, days:30, sketches:250, stencils:120, tryons:100, extracts:120, photo_retouch:80, videos:9, clients_quota:15, animations:22, demo_pool:2000, popular:false },
+    { key:'trial',   name:'Пробный',  price:499,  old_price:0,    days:7,  sketches:5,   stencils:5,   tryons:3,   extracts:3,   photo_retouch:3,  videos:0, clients_quota:25, animations:0,  demo_pool:25,   popular:false },
+    { key:'solo',    name:'Старт',  price:1490, old_price:1990, days:30, sketches:12,  stencils:20,  tryons:5,   extracts:15,  photo_retouch:12, videos:1, clients_quota:5,  animations:1,  demo_pool:100,  popular:false },
+    { key:'pro',     name:'Про',    price:2990, old_price:4990, days:30, sketches:60,  stencils:60,  tryons:10,  extracts:40,  photo_retouch:25, videos:2, clients_quota:10, animations:5,  demo_pool:600,  popular:true  },
+    // 🔴 v1038: было price:4990 против 3990 в MASTER_TARIFFS. Фолбэк живёт,
+    // когда сервер не ответил, — и человек видел цену на 1000 ₽ выше той,
+    // что возьмёт касса. Цена берётся из кода, а не из этой строки.
+    { key:'atelier', name:'Про+', price:3990, old_price:5990, days:30, sketches:100,  stencils:100, tryons:20,  extracts:60,  photo_retouch:40, videos:3, clients_quota:12, animations:8,  demo_pool:1200, popular:false },
+    { key:'studio',  name:'Макс',   price:6990, old_price:9990, days:30, sketches:150, stencils:150, tryons:40,  extracts:100, photo_retouch:60, videos:5, clients_quota:15, animations:12, demo_pool:2000, popular:false },
   ];
 
   // v672: последний ЖИВОЙ payload тарифов (из /api/cabinet). Всё, что
@@ -1332,6 +1340,89 @@
   // был успешно открыт (вне зависимости от результата оплаты), false если
   // не удалось получить URL или открыть окно — тогда вызывающий код
   // должен попробовать fallback (openTelegramLink → window.location.href).
+  // 🔴 v1030 (заказ владельца 31.08). Раньше оплата из мини-аппа шла через
+  // tg.openInvoice — окно Telegram Payments, где есть карта, ЮMoney и
+  // SberPay, но НЕТ СБП, а сверху системные плашки Telegram про «мы не даём
+  // никаких гарантий», которые мы не можем ни отредактировать, ни убрать.
+  //
+  // Теперь спрашиваем способ и открываем ссылку кассы напрямую: человек
+  // уходит В СВОЙ БАНК и подтверждает там, реквизиты руками не вводит.
+  // Владелец: «нужны СБП, SberPay и TPay, ЮMoney не нужен».
+  const PAY_METHODS = [
+    { id: 'sbp',           label: '⚡️ СБП — любой банк' },
+    { id: 'sberbank',      label: '💚 SberPay' },
+    { id: 'tinkoff_bank',  label: '🟡 TPay — Т-Банк' },
+  ];
+
+  /* v1041: лист выбора способа — со своей кнопкой выхода.
+     Системный tg.showPopup держит максимум ТРИ кнопки, и все три занимают
+     способы оплаты: «Отмена» в него не помещается физически. Владелец уперся
+     в это 31.08: «нельзя выйти из этого окна». Окно стоит на пути тех самых
+     248 брошенных счетов из 490 за август, так что выход тут — про деньги,
+     а не про удобство. Разметка повторяет лист витрины (pricing-window). */
+  function _paySheet(titleText, subText) {
+    var old = document.getElementById('pmOverlay');
+    if (old) old.remove();
+    var ov = document.createElement('div');
+    ov.id = 'pmOverlay';
+    ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);' +
+      'z-index:999;display:flex;align-items:flex-end;justify-content:center';
+    var sheet = document.createElement('div');
+    sheet.style.cssText = 'background:#14231b;border-radius:16px 16px 0 0;' +
+      'padding:16px 16px 22px;width:100%;max-width:480px;' +
+      'font:15px/1.4 -apple-system,Segoe UI,Roboto,sans-serif;color:#f2f0e6';
+    var h = document.createElement('div');
+    h.style.cssText = 'font-weight:700;margin-bottom:4px';
+    h.textContent = titleText;
+    var sub = document.createElement('div');
+    sub.style.cssText = 'font-size:12.5px;opacity:.7;margin-bottom:12px';
+    sub.textContent = subText;
+    sheet.appendChild(h); sheet.appendChild(sub);
+    ov.appendChild(sheet);
+    document.body.appendChild(ov);
+    function mkBtn(label, note, fn) {
+      var b = document.createElement('button');
+      b.style.cssText = 'display:flex;width:100%;margin-top:8px;padding:13px;' +
+        'border-radius:11px;border:1px solid #2c4636;background:#1c3527;' +
+        'color:#f2f0e6;font-size:15px;font-weight:600;cursor:pointer;' +
+        'align-items:center;justify-content:space-between;gap:10px;text-align:left';
+      var l = document.createElement('span'); l.textContent = label;
+      b.appendChild(l);
+      b.onclick = function () { ov.remove(); if (fn) fn(); };
+      sheet.appendChild(b);
+      return b;
+    }
+    return { ov: ov, sheet: sheet, mkBtn: mkBtn };
+  }
+
+  /* v1059: лист кабинета знает подписку так же, как витрина: заголовок
+     «Подписка · …», подзаголовок с суммой и периодом, способы — только те,
+     что сохраняют способ оплаты (sub_methods с сервера). Пометок про
+     разовый платёж или продление в кнопках нет (владелец 02.09). */
+  function askPayMethod(isSub, info) {
+    var i = info || {};
+    return new Promise(resolve => {
+      try {
+        var _title = isSub ? 'Подписка · как удобно оплатить?' : 'Как удобно оплатить?';
+        var _sub = (isSub && i.price)
+          ? ((i.title ? i.title + ': ' : '') + i.price + ' ₽ сейчас, дальше каждые 30 дней автоматически. Отключить — один тап в кабинете.')
+          : 'Откроется приложение вашего банка — подтвердите платёж там.';
+        var s = _paySheet(_title, _sub);
+        var _allowed = (isSub && Array.isArray(i.methods) && i.methods.length) ? i.methods : null;
+        var _methods = _allowed ? PAY_METHODS.filter(function (m) { return _allowed.indexOf(m.id) >= 0; })
+                                : PAY_METHODS;
+        _methods.forEach(function (m) {
+          s.mkBtn(m.label, '', function () { resolve(m.id); });
+        });
+        s.mkBtn('Отмена', '', function () { resolve(''); });
+        // Тап по фону — первый рефлекс на телефоне; считаем это отказом.
+        s.ov.addEventListener('click', function (e) {
+          if (e.target === s.ov) { s.ov.remove(); resolve(''); }
+        });
+      } catch (e) { resolve('sbp'); }
+    });
+  }
+
   async function openPaidInvoice(tariffKey) {
     if (!tg) return false;
     const initData = tg.initData || '';
@@ -1339,8 +1430,27 @@
       console.warn('[tariffs] no initData — cannot call /api/invoice');
       return false;
     }
+    // v1059: подписка узнаёт себя с сервера тем же /api/cabinet (sub_on,
+    // sub_methods, живая цена) — лист не гадает и не показывает способы,
+    // которые подписку не сохранят.
+    var _subInfo = { on: false, methods: ['sbp'], price: 0, title: '' };
+    try {
+      const _cr = await fetch(BOT_API_BASE + '/api/cabinet?initData='
+        + encodeURIComponent(initData), { method: 'GET', cache: 'no-store' });
+      if (_cr.ok) {
+        const _cd = await _cr.json();
+        _subInfo.on = !!(_cd && _cd.sub_on);
+        if (_cd && Array.isArray(_cd.sub_methods) && _cd.sub_methods.length) _subInfo.methods = _cd.sub_methods.map(String);
+        var _ct = ((_cd && _cd.tariffs) || []).find(function (t) { return t && t.key === tariffKey; });
+        if (_ct) { _subInfo.price = +_ct.price || 0; _subInfo.title = _ct.title || _ct.name || ''; }
+      }
+    } catch (e) { console.warn('[tariffs] sub info fetch failed', e); }
+    const _isSub = _subInfo.on && tariffKey !== 'trial';
+    const method = await askPayMethod(_isSub, _subInfo);
+    if (!method) return true;          // закрыл выбор — это не ошибка
     const apiUrl = BOT_API_BASE + '/api/invoice?initData='
-      + encodeURIComponent(initData) + '&tariff=' + encodeURIComponent(tariffKey);
+      + encodeURIComponent(initData) + '&tariff=' + encodeURIComponent(tariffKey)
+      + '&m=' + encodeURIComponent(method);
     let resp;
     try {
       resp = await fetch(apiUrl, { method: 'GET' });
@@ -1365,6 +1475,22 @@
       console.error('[tariffs] no invoice URL in response:', data);
       return false;
     }
+    // v1030: касса вернула ПРЯМУЮ ссылку — открываем её, минуя Telegram
+    // Payments. Поле `open` приходит с бэкенда; старый ответ (или откат)
+    // приходит без него, и мы идём прежним путём.
+    if (data.open === 'link') {
+      console.log('[tariffs] openLink (касса напрямую):', data.url);
+      try {
+        tg.openLink(data.url);
+        tg.showAlert && tg.showAlert(
+          'Открыл оплату. Подтвердите платёж в приложении банка — тариф '
+          + 'включится сам, вернитесь сюда через минуту.');
+      } catch (e) {
+        console.error('[tariffs] openLink threw', e);
+        return false;
+      }
+      return true;
+    }
     console.log('[tariffs] openInvoice URL:', data.url);
     return new Promise(resolve => {
       try {
@@ -1382,7 +1508,7 @@
             // юзер закрыл окно — ничего не делаем
           } else if (status === 'failed') {
             tg.showAlert && tg.showAlert(
-              '❌ Оплата не прошла. Попробуй ещё раз или напиши Николаю.'
+              '❌ Оплата не прошла — деньги не списаны.\n\nПопробуйте ещё раз или выберите другой способ. Не выходит — напишите в поддержку @tatututbot, разберёмся.'
             );
           } else if (status === 'pending') {
             tg.showAlert && tg.showAlert(
@@ -1431,12 +1557,22 @@
     try {
       const resp = await fetch(BOT_API_BASE + '/api/bind-card?initData=' + encodeURIComponent(initData));
       const data = await resp.json().catch(() => ({}));
-      if (data && data.already_bound) { tg && tg.showAlert && tg.showAlert('Карта уже привязана ✅'); return; }
+      // v1021: способ уже сохранён — значит тап был «верни подписку», и
+      // бэкенд её ВКЛЮЧИЛ (ветка already_bound в /api/bind-card). Раньше
+      // здесь стоял алерт-заглушка и человек упирался в стенку: кнопка
+      // нажата, сообщение бодрое, состояние не изменилось. Показываем ответ
+      // сервера и перечитываем кабинет — блок подписки обязан стать активным
+      // на том же экране, без выхода и перезахода.
+      if (data && data.already_bound) {
+        tg && tg.showAlert && tg.showAlert(data.message || 'Способ оплаты уже сохранён ✅');
+        if (data.resumed || data.subscribed) { try { await loadCabinet(); } catch (e) {} }
+        return;
+      }
       if (resp.ok && data && data.url) {
         if (tg && tg.openLink) { tg.openLink(data.url); return; }
         window.location.href = data.url; return;
       }
-      tg && tg.showAlert && tg.showAlert((data && data.message) || 'Не получилось открыть привязку карты.');
+      tg && tg.showAlert && tg.showAlert((data && data.message) || 'Не получилось открыть сохранение способа оплаты.');
     } catch (e) {
       console.error('[bind-card] failed', e);
       tg && tg.showAlert && tg.showAlert('Сеть недоступна, попробуй ещё раз.');
@@ -1535,7 +1671,7 @@
     // (120 у Про, 250 у Макс): человек выбирал пакет, не видя главного, что в
     // нём есть. Ячейки условные — тариф без оси (ПМ) не покажет пустую.
     const sketchCell = (t.sketches > 0)
-      ? `<div><span class="f-num">${fmt(t.sketches)}</span><span class="f-lab">Создание эскизов</span></div>`
+      ? `<div><span class="f-num">${fmt(t.sketches)}</span><span class="f-lab">Эскизы и правки</span></div>`
       : '';
     const retouchCell = (t.photo_retouch > 0)
       ? `<div><span class="f-num">${fmt(t.photo_retouch)}</span><span class="f-lab">Улучшение фото</span></div>`
@@ -1570,7 +1706,7 @@
       btnHtml = '<button class="btn-buy" data-tariff="trial" data-action="trial">Активировать Пробный</button>';
       // v217: цена триала из payload (sync с MASTER_TARIFFS["trial"]["price"]).
       // Жёсткий «1 ₽» был bait-and-switch (ЗоЗПП ст.16) — теперь динамика.
-      trialNote = '<div class="trial-note">Разовая проба за <b>' + fmtPrice(t.price) + ' ₽</b> через СБП — <b>без привязки карты</b>.<br>Через 7 дней доступ закроется, дальше — любой платный тариф.</div>';
+      trialNote = '<div class="trial-note">Разовая проба за <b>' + fmtPrice(t.price) + ' ₽</b> через СБП — <b>без подписки</b>.<br>Через 7 дней доступ закроется, дальше — любой платный тариф.</div>';
     } else {
       btnHtml = `<button class="btn-buy" data-tariff="${t.key}" data-action="buy">Оформить за ${fmtPrice(t.price)} ₽</button>`;
     }
@@ -1886,6 +2022,17 @@
     } catch (e) {}
   }
 
+  // v1064: CTA «докупить» ведёт в витрину, к секции докупок (#addons): цены
+  // там живые (/api/packs) и продаются все оси. Раньше кнопка уходила
+  // deep-link'ом в @tatututbot на пак tryons_50, снятый с продажи в v1006,
+  // с ценой, вписанной в текст.
+  function goAddons() {
+    try {
+      window.location.assign('pricing-window.html?v=931&current='
+        + encodeURIComponent(CURRENT_TARIFF_KEY || '') + '#addons');
+    } catch (e) {}
+  }
+
   // v217 (LAUNCH-BLOCKER #4): включён ли реальный retention-ops pipeline
   // (discount30/pause30/downgrade_lite). default false — пока YooKassa
   // вручную не подключён, сервер вернёт 503 на эти ветки. Чтобы не врать
@@ -1894,19 +2041,19 @@
   // в applyCabinet.
   let RETENTION_OPS_ACTIVE = false;
 
-  // v214: bind autorenew checkbox onChange — если юзер дернул чекбокс,
-  // ведём его на cancel-flow (тот же путь что и кнопка в pricing-window).
-  // Сам тогл visual-only — реальное отключение через showPopup 3-shot retention.
+  // v214: bind autorenew box — тап по кнопке ведёт на cancel-flow
+  // (showPopup 3-shot retention). v1064: витрина кнопки подписки больше не
+  // держит — этот блок единственный вход в отключение.
   let _autorenewBound = false;
   function bindAutorenewBox() {
     if (_autorenewBound) return;
-    const cb = $('autorenewCheck');
-    if (!cb) return;
+    // v1004: чекбокс заменён кнопкой «🔕 Отключить подписку» — тап открывает
+    // тот же cancel-flow с retention. Имя posthog-события сохранено, чтобы
+    // не рвать воронку в аналитике.
+    const btn = $('autorenewOffBtn');
+    if (!btn) return;
     _autorenewBound = true;
-    cb.addEventListener('change', (e) => {
-      if (cb.checked) return;  // включить обратно — ничего не делаем (visual-only)
-      // Юзер хочет отключить → возвращаем checked + открываем 3-shot retention
-      cb.checked = true;
+    btn.addEventListener('click', () => {
       if (window.posthog) posthog.capture('cabinet_autorenew_unchecked', {});
       startCancelRetention();
     });
@@ -1967,24 +2114,42 @@
     // _build_cabinet_payload). Иначе показываем alt-карточку без обещаний.
     const renewBox = $('autorenewBox');
     const renewNote = $('autorenewTrialNote');
-    if (d.autorenew_active === true) {
+    // v1013: правда о подписке приходит блоком d.subscription (bot.py
+    // _subscription_view). Откат на d.autorenew_active — для старых билдов
+    // бэкенда: мини-апп живёт в чатах дольше, чем деплой, и наоборот.
+    const sub = d.subscription || null;
+    const subActive = sub ? (sub.state === 'active') : (d.autorenew_active === true);
+    if (subActive) {
       if (renewBox) renewBox.classList.remove('hidden');
       if (renewNote) renewNote.classList.add('hidden');
-      // Бриф J: показать ЧТО продлевается — тариф · цена · дата след. списания.
-      // Владелец/мастер путался «какой тариф привязался».
+      // v1004: заголовок «Подписка активна — {тариф}» + детали
+      // «Продлится {дата} · спишется {цена} ₽».
+      const titleEl = $('autorenewTitle');
+      const activeName = ((sub && sub.next_title) || d.tariff_name || '').trim();
+      if (titleEl) {
+        titleEl.textContent = activeName
+          ? 'Подписка активна — ' + activeName : 'Подписка активна';
+      }
       const detail = $('autorenewDetail');
       if (detail) {
-        const tname = (d.tariff_name || '').trim();
-        const price = priceForTariff(d);
-        const when = fmtChargeDate(d.tariff_expires_at_iso);
+        // v1013: цена и дата — из d.subscription. Их считает та же функция,
+        // по которой спишет касса (_next_charge_plan), поэтому отложенная
+        // смена тарифа и скидка первого продления показаны честно; витринная
+        // цена в обоих случаях врала бы.
+        const price = (sub && sub.next_amount > 0) ? sub.next_amount : priceForTariff(d);
+        const when = fmtChargeDate((sub && sub.next_charge_iso) || d.tariff_expires_at_iso);
         const parts = [];
-        if (tname) parts.push(tname);
-        if (price > 0) parts.push(price.toLocaleString('ru-RU') + ' ₽');
-        let line = parts.join(' · ');
-        if (when) line += (line ? ' · ' : '') + 'списание ' + when;
-        detail.textContent = line;          // '' → пусто, блок не сломан
+        if (when) parts.push('Продлится ' + when);
+        if (price > 0) parts.push('спишется ' + price.toLocaleString('ru-RU') + ' ₽');
+        if (sub && sub.method) parts.push(sub.method);
+        // 🔴 v1013: «напомним за сутки» УБРАНО. По решению владельца 28.08
+        // (v1007) письмо накануне списания остаётся только на переходе
+        // пробный→Старт; подписчику со второго месяца оно не приходит — и
+        // кабинет обещал то, чего машина не делает.
+        parts.push('отменить — в любой момент');
+        detail.textContent = parts.join(' · ');
       }
-      // v214: autorenew checkbox onChange → cancel-flow с retention
+      // v214→v1004: кнопка «Отменить подписку» → cancel-flow с retention
       bindAutorenewBox();
     } else {
       if (renewBox) renewBox.classList.add('hidden');
@@ -1994,31 +2159,62 @@
       // нелепо («у меня Премиум, какой триал?»). Теперь honesty по статусу.
       const note_title = $('autorenewTrialNoteTitle');
       const note_body  = $('autorenewTrialNoteBody');
-      const tname = (d.tariff_name || '').trim();
       const tkey = d.tariff_key || 'trial';
+      // v1013: состояний четыре, и «механика выключена» — не то же самое,
+      // что «человек не подключил». Раньше оба показывались одинаково.
+      const sState = (sub && sub.state) || (tkey === 'trial' ? 'trial' : 'off');
+      const noteIcon = $('subNoteIcon');
+      if (noteIcon) {
+        noteIcon.textContent = (sState === 'trial') ? '🎁'
+          : (sState === 'unavailable') ? '💳' : '🔕';
+      }
       if (note_title) {
-        if (tkey === 'trial') note_title.textContent = 'Активный триал';
-        else if (tname) note_title.textContent = 'Активный тариф · ' + tname;
-        else note_title.textContent = 'Активный тариф';
+        // v1004: платному без подписки — «Подписка не подключена» (макет);
+        // триалу — как было.
+        if (sState === 'trial') note_title.textContent = 'Активный триал';
+        else if (sState === 'unavailable') note_title.textContent = 'Активный тариф';
+        else note_title.textContent = 'Подписка не подключена';
       }
       if (note_body) {
-        if (tkey === 'trial') {
-          note_body.textContent = 'Триал не продлевается автоматически. Продли через прайс перед окончанием.';
+        const till = fmtChargeDate(d.tariff_expires_at_iso);
+        if (sState === 'trial') {
+          note_body.textContent = 'Пробный не продлевается сам — списаний не будет. Перед его концом придёт экран с тарифами.';
+        } else if (sState === 'unavailable') {
+          note_body.textContent = 'Доступ до ' + (till || 'конца оплаченного периода')
+            + '. Продление сейчас только вручную — напоминание придёт перед окончанием.';
         } else {
-          note_body.textContent = 'Автопродление отключено. Привяжи карту — подписка продлится сама, не нужно следить за датой.';
+          note_body.textContent = 'Доступ до ' + (till || 'конца оплаченного периода')
+            + ', дальше — вручную. Подключи: продлится само, отключение — один тап.';
         }
       }
-      // v249: платным без карты — кнопка «Привязать карту» (?start=bind_card).
-      // Триалу не показываем (у триала нет автопродления по дизайну).
+      // v249: платным без подписки — кнопка «🔔 Подключить подписку»
+      // (/api/bind-card). Триалу не показываем (у триала нет подписки по дизайну).
+      // v1013: гейт — can_subscribe с бэкенда (он знает и про флаг механики),
+      // с откатом на прежнее условие для старых билдов.
       const bindBtn = $('bindCardBtn');
       if (bindBtn) {
-        if (tkey !== 'trial') {
+        const canSub = sub ? !!sub.can_subscribe : (tkey !== 'trial');
+        if (canSub) {
           bindBtn.classList.remove('hidden');
           if (!bindBtn._bound) {
             bindBtn._bound = true;
             bindBtn.addEventListener('click', function() {
               if (window.posthog) posthog.capture('cabinet_bind_card_click', {});
-              startCardBind();   // v254: робастный /api/bind-card → openLink
+              // v1051 (этап 1): подписка не включается молча — человек
+              // подтверждает сумму и период до похода в банк. Сумма из
+              // блока подписки с сервера (одна дверь с самим списанием).
+              // v1057: при выключенной подписке next_* пустые — сумму и тариф
+              // даёт plan_* (тот же расчёт, что у самого списания).
+              var _amt = (sub && (sub.next_amount || sub.plan_amount || sub.amount)) || '';
+              var _ttl = (sub && (sub.next_title || sub.plan_title || sub.title)) || 'текущий тариф';
+              var _msg = 'Подключить подписку: ' + _ttl
+                + (_amt ? ' — ' + _amt + ' ₽' : '') + ' раз в 30 дней, '
+                + 'списание автоматически по СБП. Отключить — один тап здесь же.';
+              if (tg && tg.showConfirm) {
+                tg.showConfirm(_msg, function(ok){ if (ok) startCardBind(); });
+              } else if (window.confirm(_msg)) {
+                startCardBind();   // v254: робастный /api/bind-card → openLink
+              }
             });
           }
         } else {
@@ -2276,9 +2472,10 @@
   }
 
   // v214: ─── 3-SHOT RETENTION CANCEL FLOW ───────────────────
-  // Когда юзер хочет отменить (через checkbox autorenew или через
-  // pricing-window cancel-sub button) — сначала показываем 3 ретеншн-оффера,
-  // и только потом «всё равно отменить». Каждый шаг — отдельный showPopup.
+  // Когда юзер хочет отменить (кнопка «🔕 Отключить подписку» в блоке
+  // подписки кабинета; v1064: с витрины кнопка снята, вход только здесь) —
+  // сначала показываем 3 ретеншн-оффера, и только потом «всё равно
+  // отменить». Каждый шаг — отдельный showPopup.
   //
   // Endpoints (стабы в bot.py /api/cancel-subscription?action=...):
   //   discount30       — 30% скидка на след.месяц + cancel auto-renew
@@ -2295,6 +2492,34 @@
     return fetch(API_BASE + '/api/cancel-subscription' + qs, { method: 'POST' })
       .then(r => r.json().catch(() => ({})))
       .catch(e => { console.error('[cancel] failed', e); return null; });
+  }
+
+  // v1013: ОДНА точка «отменить на самом деле» — её зовут и попап, и
+  // запасной confirm. До этого отмена жила в трёх местах, и часть из них
+  // не перечитывала кабинет: человек видел «подписка активна» после отмены.
+  function doCancelNow() {
+    return postCancelAction('').then(d => {
+      const msg = (d && d.message)
+        || '✅ Подписка отменена. Доступ сохранится до конца оплаченного периода.';
+      if (tg && tg.showAlert) { try { tg.showAlert(msg); } catch (e) {} }
+      else { try { window.alert(msg); } catch (e) {} }
+      try { loadCabinet(); } catch (e) {}
+      return d;
+    });
+  }
+
+  // 🔴 v1013 (замер 30.08 в браузере): showPopup МОЖЕТ СУЩЕСТВОВАТЬ и при этом
+  // бросать WebAppMethodUnsupported — так отвечает клиент Telegram 6.0.
+  // Старая проверка `!tg || !tg.showPopup` такой клиент не ловила: попап падал
+  // в catch, и кнопка «Отменить подписку» не делала РОВНО НИЧЕГО. Отмена,
+  // которая молчит, уходит в банк возвратом. Запасной путь — обычный confirm.
+  function confirmCancelFallback() {
+    let ok = false;
+    try {
+      ok = window.confirm('Отменить подписку? Доступ сохранится до конца '
+        + 'оплаченного периода. Списаний больше не будет.');
+    } catch (e) { ok = true; }
+    if (ok) doCancelNow();
   }
 
   function startCancelRetention() {
@@ -2335,8 +2560,7 @@
     // шаг 1 — 3 ретеншн оффера + "ещё причины", шаг 2 — downgrade + cancel.
     if (!tg || !tg.showPopup) {
       // fallback на confirm — без retention, прямой cancel
-      const ok = window.confirm('Отменить автопродление? Карта будет отвязана.');
-      if (ok) postCancelAction('').then(d => tg?.showAlert?.(d?.message || 'Подписка отменена.'));
+      confirmCancelFallback();
       return;
     }
     // v217 (LAUNCH-BLOCKER #4): если retention-ops-pipeline ещё не подключён
@@ -2347,22 +2571,20 @@
       if (window.posthog) posthog.capture('cancel_retention_ops_inactive', { tariff: CURRENT_TARIFF_KEY });
       try {
         tg.showPopup({
-          title: 'Отменить подписку?',
-          message: 'Доступ сохранится до конца оплаченного периода. Карта будет отвязана, автосписаний не будет.',
+          title: 'Отключить подписку?',
+          message: 'Доступ сохранится до конца оплаченного периода. Списаний больше не будет.',
           buttons: [
-            { id: 'cancel', type: 'destructive', text: 'Всё равно отменить' },
+            { id: 'cancel', type: 'destructive', text: 'Всё равно отключить' },
             { id: 'back',   type: 'cancel',      text: 'Назад' },
           ],
         }, (id) => {
           if (window.posthog) posthog.capture('cancel_retention_inactive_choice', { choice: id });
-          if (id === 'cancel') {
-            postCancelAction('').then(d => {
-              tg.showAlert?.(d?.message || '✅ Подписка отменена. Доступ сохранится до конца оплаченного периода.');
-            });
-          }
+          if (id === 'cancel') { doCancelNow(); }
         });
       } catch (e) {
+        // v1013: попап не поддержан клиентом — отмена обязана дойти всё равно
         console.error('[cancel] inactive popup threw', e);
+        confirmCancelFallback();
       }
       return;
     }
@@ -2396,7 +2618,9 @@
         // popup закрыт — ничего не делаем
       });
     } catch (e) {
+      // v1013: см. confirmCancelFallback — попап может бросить, отмена нет
       console.error('[cancel] showPopup threw', e);
+      confirmCancelFallback();
     }
   }
 
@@ -2430,12 +2654,7 @@
           });
           return;
         }
-        if (id === 'cancel') {
-          postCancelAction('').then(d => {
-            tg.showAlert?.(d?.message || '✅ Подписка отменена. Доступ сохранится до конца оплаченного периода.');
-          });
-          return;
-        }
+        if (id === 'cancel') { doCancelNow(); return; }
         // back — ничего
       });
     } catch (e) {
@@ -2460,7 +2679,7 @@
   $('navFAQ').onclick = () => {
     const faq = 'Оплата: «Сменить тариф» → выбери → СБП.\n'
       + 'Промокод: отправь боту /promo КОД.\n'
-      + 'Отвязать карту: кнопка внизу окна тарифов.\n'
+      + 'Подписка: подключить или отключить — здесь, в кабинете (блок «Подписка» наверху).\n'
       + 'Поддержка: @tatututbot';
     if (tg?.showPopup) { try { tg.showPopup({ title: 'FAQ', message: faq, buttons: [{ type: 'ok' }] }); return; } catch (e) {} }
     tg?.showAlert?.(faq);
@@ -2564,8 +2783,8 @@
 
   // v214: goal-gradient link-pool-bar. Loss-aversion + overage CTA.
   // pct=used/total*100. ≥70% → 'warn' (мягкая CTA на Pro+). ≥90% → 'danger'
-  // (горящая CTA на overage SKU «+50 примерок за 690₽»). Юзер видит как
-  // утекает бюджет → апселл срабатывает в момент максимальной боли.
+  // (горящая CTA «докупи примерки» → витрина, секция докупок; v1064). Юзер
+  // видит как утекает бюджет → апселл срабатывает в момент максимальной боли.
   function renderLinkPoolBar(pool, remaining) {
     const bar = $('linkPoolBar');
     if (!bar) return;
@@ -2589,15 +2808,11 @@
       bar.classList.add('danger');
       cta.classList.remove('hidden');
       cta.innerHTML = '🔥 Бюджет почти исчерпан — ' +
-        '<a id="lpOverageLink">докупи +50 примерок за 690₽</a>';
+        '<a id="lpOverageLink">докупи примерки</a>';
       const a = $('lpOverageLink');
       if (a) a.onclick = () => {
         if (window.posthog) posthog.capture('link_pool_overage_cta_clicked', { pct, used, total });
-        const url = 'https://t.me/tatututbot?start=overage_tryons_50';
-        if (tg && tg.openTelegramLink) {
-          try { tg.openTelegramLink(url); return; } catch (e) {}
-        }
-        try { window.location.href = url; } catch (e) {}
+        goAddons();
       };
     } else if (pct >= 70) {
       bar.classList.add('warn');
